@@ -20,28 +20,43 @@ int file_exists(const char *filename);
 // TODO: Parse command-line arguments (-b/-r/-p) and override defaults.
 // Keep behavior consistent with the project spec.
 void parse_args(int argc, char *argv[]) {
+
     (void)argc;
     (void)argv;
 }
 
 int main(int argc, char *argv[]) {
+    
     int server_socket, client_socket;
     struct sockaddr_in server_addr, client_addr;
     socklen_t client_len;
+    
 
     parse_args(argc, argv);
 
     // TODO: Initialize OpenSSL library
-    
+    SSL_library_init(); // https://www.ibm.com/docs/en/ztpf/1.1.2024?topic=applications-initializing-library-files
+    //printf("WORKED?");
     
     // TODO: Create SSL context and load certificate/private key files
     // Files: "server.crt" and "server.key"
-    SSL_CTX *ssl_ctx = NULL;
     
+    // https://www.ibm.com/docs/en/ztpf/1.1.2024?topic=apis-ssl-ctx-new, https://www.ibm.com/docs/en/ztpf/1.1.2024?topic=apis-tls-server-method
+    //const SSL_METHOD *TLS_server_method(void)
+
+    SSL_CTX *ssl_ctx = SSL_CTX_new(TLS_server_method());
+
     if (ssl_ctx == NULL) {
         fprintf(stderr, "Error: SSL context not initialized\n");
         exit(EXIT_FAILURE);
     }
+
+    // we ran ./generate_certs.sh 
+    SSL_CTX_use_certificate_file(ssl_ctx, "server.crt" , 1 );
+
+    SSL_CTX_use_certificate_file(ssl_ctx, "server.key" , 1 );
+    
+
 
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (server_socket == -1) {
