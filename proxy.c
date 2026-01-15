@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
     
     int server_socket, client_socket;
     struct sockaddr_in server_addr, client_addr;
-    socklen_t client_len;
+    socklen_t client_len; // = sizeof(client_addr);
     
 
     parse_args(argc, argv);
@@ -93,21 +93,28 @@ int main(int argc, char *argv[]) {
         printf("Accepted connection from %s:%d\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
         
         // TODO: Create SSL structure for this connection and perform SSL handshake
-        SSL *ssl = NULL;
-        
+        SSL *ssl = SSL_new(ssl_ctx);
+
+        SSL_set_fd(ssl, client_socket); // client socked was the fd
+        //https://www.ibm.com/docs/en/ztpf/1.1.2024?topic=apis-ssl-set-fd
+
+        SSL_connect(ssl);
         
         if (ssl != NULL) {
             handle_request(ssl);
         }
         
         // TODO: Clean up SSL connection
-        
+        // https://www.ibm.com/docs/en/ztpf/1.1.2024?topic=applications-cleaning-up-ctx-ssl-structures
+        SSL_free(ssl);
         
         close(client_socket);
     }
 
     close(server_socket);
     // TODO: Clean up SSL context
+    SSL_CTX_free(ssl_ctx);
+
     
     return 0;
 }
